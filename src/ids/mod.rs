@@ -83,5 +83,30 @@ mod tests {
         let id = generator.generate_id();
         assert_eq!(id & 0xFF, 1);
         assert_eq!((id & 0xFFFFFF00) >> 8, instance_id as u64);
+
+        let id = generator.generate_id();
+        assert_eq!(id & 0xFF, 2);
+        assert_eq!((id & 0xFFFFFF00) >> 8, instance_id as u64);
+    }
+
+    #[test]
+    fn id_generator_overflow() {
+        let instance_id = generate_instance_id("WooChat");
+        let mut generator = IDGenerator {
+            instance_id,
+            sequence: u8::MAX - 1,
+        };
+
+        let id = generator.generate_id();
+        assert_eq!(id & 0xFF, u8::MAX as u64);
+        assert_eq!((id & 0xFFFFFF00) >> 8, instance_id as u64);
+
+        let id = generator.generate_id();
+        assert_eq!(id & 0xFF, 0);
+        assert_eq!((id & 0xFFFFFF00) >> 8, instance_id as u64);
+
+        let id = generator.generate_id();
+        assert_eq!(id & 0xFF, 1);
+        assert_eq!((id & 0xFFFFFF00) >> 8, instance_id as u64);
     }
 }

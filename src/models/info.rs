@@ -1,9 +1,15 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// The instance info payload.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Info {
     pub instance_name: String,
-    pub features: HashMap<String, u32>,
+    pub features: Vec<Feature>,
+}
+
+/// The instance info feature payload
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Feature {
+    pub id: u32,
+    pub name: String,
 }
