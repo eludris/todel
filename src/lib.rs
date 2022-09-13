@@ -1,3 +1,5 @@
+//! A simple crate that houses most of the Eludris models & shared logic.
+
 #[macro_use]
 extern crate lazy_static;
 

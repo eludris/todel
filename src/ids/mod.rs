@@ -1,4 +1,5 @@
 //! A simple collection of ID related utilities.
+
 use std::time::{Duration, SystemTime};
 
 lazy_static! {

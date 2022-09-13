@@ -8,6 +8,7 @@ use serde_valid::validation::Errors;
 
 use crate::models::Message;
 
+/// The type for all Error responses in Oprish
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub message: String,
@@ -16,6 +17,7 @@ pub struct ErrorResponse {
 }
 
 impl ErrorResponse {
+    /// Crete a new ErrorResponse based on the type of the passed data
     pub fn new(data: ErrorResponseData) -> ErrorResponse {
         let (message, status) = match data {
             ErrorResponseData::RateLimited { .. } => ("You have been ratelimited".to_string(), 429),
@@ -27,20 +29,24 @@ impl ErrorResponse {
         }
     }
 
+    /// Generate a respond coupled with a Status code
     pub fn to_response(self) -> (Status, Json<ErrorResponse>) {
         (Status::from_code(self.status as u16).unwrap(), Json(self))
     }
 }
 
+/// The data of ErrorResponses
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ErrorResponseData {
     RateLimited { retry_after: u64 },
 }
 
+/// A type alias for the return type of routes which have ratelimits
 pub type RatelimitedRoutResponse<T> =
     Result<RatelimitHeaderWrapper<T>, (Status, Json<ErrorResponse>)>;
 
+/// A type that wraps a Response as to add ratelimit-relavent headers to it
 #[derive(Debug, Responder)]
 #[response(content_type = "json")]
 pub struct RatelimitHeaderWrapper<T> {
@@ -51,6 +57,8 @@ pub struct RatelimitHeaderWrapper<T> {
     pub ratelimit_request_count: Header<'static>,
 }
 
+// TODO: Refactor all returns into one type
+/// The response of the message route
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum MessageCreateResponse {
