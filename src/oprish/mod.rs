@@ -71,6 +71,7 @@ pub enum MessageCreateResponse {
 }
 
 /// The *real* IP of a client.
+#[derive(Debug)]
 pub struct ClientIP(IpAddr);
 
 #[async_trait]
