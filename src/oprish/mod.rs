@@ -1,4 +1,4 @@
-use std::{convert::Infallible, net::IpAddr, str::FromStr};
+use std::{convert::Infallible, net::IpAddr, str::FromStr, fmt::Display};
 
 use rocket::{
     async_trait,
@@ -72,7 +72,13 @@ pub enum MessageCreateResponse {
 
 /// The *real* IP of a client.
 #[derive(Debug)]
-pub struct ClientIP(pub IpAddr);
+pub struct ClientIP(IpAddr);
+
+impl Display for ClientIP {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[async_trait]
 impl<'r> FromRequest<'r> for ClientIP {
