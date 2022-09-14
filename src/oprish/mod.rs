@@ -1,4 +1,4 @@
-use std::{convert::Infallible, net::IpAddr, str::FromStr, fmt::Display};
+use std::{convert::Infallible, fmt::Display, net::IpAddr, str::FromStr};
 
 use rocket::{
     async_trait,
