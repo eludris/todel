@@ -1,5 +1,9 @@
+use std::{convert::Infallible, net::IpAddr, str::FromStr};
+
 use rocket::{
+    async_trait,
     http::{Header, Status},
+    request::{FromRequest, Outcome, Request},
     serde::json::Json,
     Responder,
 };
@@ -64,4 +68,23 @@ pub struct RatelimitHeaderWrapper<T> {
 pub enum MessageCreateResponse {
     Sucess(Message),
     ValidationError(Errors),
+}
+
+/// The *real* IP of a client.
+pub struct ClientIP(IpAddr);
+
+#[async_trait]
+impl<'r> FromRequest<'r> for ClientIP {
+    type Error = Infallible;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        if let Some(ip) = req.headers().get_one("CF-Connecting-IP") {
+            Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
+        } else {
+            Outcome::Success(ClientIP(
+                req.client_ip()
+                    .unwrap_or_else(|| IpAddr::from_str("127.0.0.1").unwrap()),
+            ))
+        }
+    }
 }
