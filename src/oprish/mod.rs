@@ -86,9 +86,7 @@ impl<'r> FromRequest<'r> for ClientIP {
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         if let Some(ip) = req.headers().get_one("X-Real-IP") {
-            if let Ok(ip) = IpAddr::from_str(ip) {
-                return Outcome::Success(ClientIP(ip));
-            }
+            Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
         } else if let Some(ip) = req.headers().get_one("CF-Connecting-IP") {
             Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
         } else {
