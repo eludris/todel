@@ -61,15 +61,6 @@ pub struct RatelimitHeaderWrapper<T> {
     pub ratelimit_request_count: Header<'static>,
 }
 
-// TODO: Refactor all returns into one type
-/// The response of the message route
-#[derive(Debug, Serialize)]
-#[serde(untagged)]
-pub enum MessageCreateResponse {
-    Sucess(Message),
-    ValidationError(Errors),
-}
-
 /// The *real* IP of a client.
 #[derive(Debug)]
 pub struct ClientIP(IpAddr);
