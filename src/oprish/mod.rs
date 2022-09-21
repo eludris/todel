@@ -8,9 +8,6 @@ use rocket::{
     Responder,
 };
 use serde::{Deserialize, Serialize};
-use serde_valid::validation::Errors;
-
-use crate::models::Message;
 
 /// The type for all Error responses in Oprish
 #[derive(Debug, Serialize, Deserialize)]
