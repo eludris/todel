@@ -24,18 +24,10 @@ impl Default for Conf {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OprishConf {
     #[serde(default)]
     pub ratelimits: OprishRatelimits,
-}
-
-impl Default for OprishConf {
-    fn default() -> Self {
-        Self {
-            ratelimits: OprishRatelimits::default(),
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
