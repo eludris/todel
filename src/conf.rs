@@ -2,6 +2,7 @@ use std::fs;
 
 use serde::{Deserialize, Serialize};
 
+/// Eludris config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Conf {
     pub instance_name: String,
@@ -13,23 +14,14 @@ pub struct Conf {
     pub effis: EffisConf,
 }
 
-impl Default for Conf {
-    fn default() -> Self {
-        Self {
-            instance_name: "EludrisInstance".to_string(),
-            oprish: OprishConf::default(),
-            pandemonium: PandemoniumConf::default(),
-            effis: EffisConf::default(),
-        }
-    }
-}
-
+/// Oprish config.
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OprishConf {
     #[serde(default)]
     pub ratelimits: OprishRatelimits,
 }
 
+/// Oprish ratelimit config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OprishRatelimits {
     #[serde(default = "info_ratelimit_default")]
@@ -61,6 +53,7 @@ fn message_create_ratelimit_default() -> RatelimitData {
     }
 }
 
+/// Pandemonium config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PandemoniumConf {
     #[serde(default = "pandemonium_ratelimit_default")]
@@ -82,6 +75,7 @@ fn pandemonium_ratelimit_default() -> RatelimitData {
     }
 }
 
+/// Effis config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EffisConf {
     pub file_size: String,
@@ -102,12 +96,14 @@ fn file_size_default() -> String {
     "100MB".to_string()
 }
 
+/// Ratelimit config data.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RatelimitData {
     pub reset_after: u32,
     pub limit: u32,
 }
 
+/// Effis ratelimit data config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EffisRatelimitData {
     pub reset_after: u32,
@@ -126,7 +122,7 @@ impl Default for EffisRatelimitData {
 }
 
 impl Conf {
-    /// Create a new [`Conf`]
+    /// Create a new [`Conf`].
     ///
     /// # Panics
     ///
@@ -136,6 +132,16 @@ impl Conf {
     pub fn new(path: &str) -> Conf {
         let data = fs::read_to_string(path).unwrap();
         toml::from_str(&data).unwrap()
+    }
+
+    /// Create a new [`Conf`] with default config from the provided instance name.
+    pub fn from_name(instance_name: String) -> Self {
+        Self {
+            instance_name,
+            oprish: OprishConf::default(),
+            pandemonium: PandemoniumConf::default(),
+            effis: EffisConf::default(),
+        }
     }
 }
 
@@ -153,6 +159,10 @@ info = { reset_after = 10, limit = 2}
 
 [pandemonium]
 ratelimit = { reset_after = 20, limit = 10}
+
+[effis]
+file_size = "100MB"
+ratelimit = { reset_after = 10, limit = 2, file_size_limit = "500MB"}
             "#;
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
@@ -174,7 +184,14 @@ ratelimit = { reset_after = 20, limit = 10}
                     limit: 10,
                 },
             },
-            ..Default::default()
+            effis: EffisConf {
+                file_size: "100MB".to_string(),
+                ratelimit: EffisRatelimitData {
+                    reset_after: 10,
+                    limit: 2,
+                    file_size_limit: "500MB".to_string(),
+                },
+            },
         };
 
         assert_eq!(format!("{:?}", conf_str), format!("{:?}", conf));
@@ -183,12 +200,12 @@ ratelimit = { reset_after = 20, limit = 10}
     #[test]
     fn default_conf() {
         let conf_str = r#"
-instance_name = "EludrisInstance"
+instance_name = "TestInstance"
             "#;
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
 
-        let conf = Conf::default();
+        let conf = Conf::from_name("TestInstance".to_string());
 
         assert_eq!(format!("{:?}", conf_str), format!("{:?}", conf));
     }
