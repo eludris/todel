@@ -1,3 +1,4 @@
+//! Simple abstraction for a TOML based Eludris configuration file
 use std::{env, fs, path};
 
 use serde::{Deserialize, Serialize};
