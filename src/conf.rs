@@ -1,4 +1,4 @@
-use std::fs;
+use std::{env, fs, path};
 
 use serde::{Deserialize, Serialize};
 
@@ -129,9 +129,21 @@ impl Conf {
     /// This function is *intended* to panic if a suitable config is not found.
     ///
     /// That also includes the config file's data failing to deserialise.
-    pub fn new(path: &str) -> Conf {
+    pub fn new<T: AsRef<path::Path>>(path: T) -> Self {
         let data = fs::read_to_string(path).unwrap();
         toml::from_str(&data).unwrap()
+    }
+
+    /// Create a new [`Conf`] by determining it's path based on the "ELUDRIS_CONF" environment
+    /// variable or falling back to "Eludris.toml" if it is not found.
+    ///
+    /// # Panics
+    ///
+    /// This function is *intended* to panic if a suitable config is not found.
+    ///
+    /// That also includes the config file's data failing to deserialise.
+    pub fn new_from_env() -> Self {
+        Self::new(env::var("ELUDRIS_CONF").unwrap_or_else(|_| "Eludris.toml".to_string()))
     }
 
     /// Create a new [`Conf`] with default config from the provided instance name.
