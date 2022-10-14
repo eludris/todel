@@ -7,7 +7,7 @@ lazy_static! {
         SystemTime::UNIX_EPOCH + Duration::from_secs(1_650_000_000);
 }
 
-/// Generates an instance id from the instance's name.
+/// Generate an instance id
 pub fn generate_instance_id() -> u64 {
     // This is just a 42 bit Unix timestamp
     SystemTime::now()
@@ -17,7 +17,7 @@ pub fn generate_instance_id() -> u64 {
         & 0xFFFFFFFFFFFF
 }
 
-/// A type that's used for ceating and managing IDs by keeping track of a sequence number.
+/// An abstraction for generating spec-compliant IDs and handling incrementing them
 ///
 /// ## Example
 ///
@@ -35,7 +35,7 @@ pub struct IDGenerator {
 }
 
 impl IDGenerator {
-    /// Creates a new IDGenerator from an instance ID.
+    /// Create a new IDGenerator from an instance ID.
     pub fn new(instance_id: u64) -> IDGenerator {
         IDGenerator {
             instance_id,
