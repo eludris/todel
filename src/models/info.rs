@@ -4,12 +4,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Info {
     pub instance_name: String,
-    pub features: Vec<Feature>,
-}
-
-/// The instance info feature payload
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Feature {
-    pub id: u32,
-    pub name: String,
+    // This should be somewhere between 1 character and 2048 characters long
+    pub description: Option<String>,
 }
