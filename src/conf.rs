@@ -164,18 +164,19 @@ mod tests {
 
     #[test]
     fn try_deserialize() {
+        // This is yucky since there is leading space but TOML thankfully doesn't mind it
         let conf_str = r#"
-instance_name = "WooChat"
+            instance_name = "WooChat"
 
-[oprish.ratelimits]
-info = { reset_after = 10, limit = 2}
+            [oprish.ratelimits]
+            info = { reset_after = 10, limit = 2}
 
-[pandemonium]
-ratelimit = { reset_after = 20, limit = 10}
+            [pandemonium]
+            ratelimit = { reset_after = 20, limit = 10}
 
-[effis]
-file_size = "100MB"
-ratelimit = { reset_after = 10, limit = 2, file_size_limit = "500MB"}
+            [effis]
+            file_size = "100MB"
+            ratelimit = { reset_after = 10, limit = 2, file_size_limit = "500MB"}
             "#;
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
@@ -212,9 +213,7 @@ ratelimit = { reset_after = 10, limit = 2, file_size_limit = "500MB"}
 
     #[test]
     fn default_conf() {
-        let conf_str = r#"
-instance_name = "TestInstance"
-            "#;
+        let conf_str = "instance_name = \"TestInstance\"";
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
 
