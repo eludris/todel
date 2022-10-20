@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Conf {
     pub instance_name: String,
+    pub description: Option<String>,
     #[serde(default)]
     pub oprish: OprishConf,
     #[serde(default)]
@@ -132,7 +133,13 @@ impl Conf {
     /// That also includes the config file's data failing to deserialise.
     pub fn new<T: AsRef<path::Path>>(path: T) -> Self {
         let data = fs::read_to_string(path).unwrap();
-        toml::from_str(&data).unwrap()
+        let data: Self = toml::from_str(&data).unwrap();
+        if let Some(description) = &data.description {
+            if description.is_empty() || description.len() < 2048 {
+                panic!("Invalid description lenght, must be between 1 and 2048 characters long");
+            }
+        }
+        data
     }
 
     /// Create a new [`Conf`] by determining it's path based on the "ELUDRIS_CONF" environment
@@ -151,6 +158,7 @@ impl Conf {
     pub fn from_name(instance_name: String) -> Self {
         Self {
             instance_name,
+            description: None,
             oprish: OprishConf::default(),
             pandemonium: PandemoniumConf::default(),
             effis: EffisConf::default(),
@@ -167,6 +175,7 @@ mod tests {
         // This is yucky since there is leading space but TOML thankfully doesn't mind it
         let conf_str = r#"
             instance_name = "WooChat"
+            description = "The poggest place to chat"
 
             [oprish.ratelimits]
             info = { reset_after = 10, limit = 2}
@@ -183,6 +192,7 @@ mod tests {
 
         let conf = Conf {
             instance_name: "WooChat".to_string(),
+            description: Some("The poggest place to chat".to_string()),
             oprish: OprishConf {
                 ratelimits: OprishRatelimits {
                     info: RatelimitData {
