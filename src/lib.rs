@@ -3,8 +3,10 @@
 #[macro_use]
 extern crate lazy_static;
 
+pub mod conf;
 pub mod ids;
 pub mod models;
+pub use conf::Conf;
 
 #[cfg(feature = "oprish")]
 pub mod oprish;
