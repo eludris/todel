@@ -73,9 +73,16 @@ impl<'r> FromRequest<'r> for ClientIP {
     type Error = Infallible;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        if let Some(ip) = req.headers().get_one("X-Real-IP") {
-            Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
-        } else if let Some(ip) = req.headers().get_one("CF-Connecting-IP") {
+        // Hey there future reader or probably oliver, in case you're wondering why these two lines
+        // got removed it's because apparently rocket already checks the `X-Real-IP` header when
+        // the `client_ip` method is called
+        //
+        // Docs: https://api.rocket.rs/v0.5-rc/rocket/request/struct.Request.html#method.client_ip
+        //
+        // if let Some(ip) = req.headers().get_one("X-Real-IP") {
+        // Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
+        // } else
+        if let Some(ip) = req.headers().get_one("CF-Connecting-IP") {
             Outcome::Success(ClientIP(IpAddr::from_str(ip).unwrap()))
         } else {
             Outcome::Success(ClientIP(
