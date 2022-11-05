@@ -123,6 +123,16 @@ impl Default for EffisRatelimitData {
     }
 }
 
+macro_rules! validate_ratelimit_limits {
+    ($ratelimits:expr, $($bucket_name:ident),+) => {
+        if $(
+            $ratelimits.$bucket_name.limit == 0
+            )||+ {
+            panic!("Ratelimit limit can't be 0");
+        }
+    };
+}
+
 impl Conf {
     /// Create a new [`Conf`].
     ///
@@ -135,9 +145,16 @@ impl Conf {
         let data = fs::read_to_string(path).unwrap();
         let data: Self = toml::from_str(&data).unwrap();
         if let Some(description) = &data.description {
-            if description.is_empty() || description.len() < 2048 {
-                panic!("Invalid description lenght, must be between 1 and 2048 characters long");
+            if description.is_empty() || description.len() > 2048 {
+                panic!("Invalid description length, must be between 1 and 2048 characters long");
             }
+        }
+        if data.pandemonium.ratelimit.limit == 0 || data.effis.ratelimit.limit == 0 {
+            panic!("Ratelimit limit can't be 0");
+        }
+        validate_ratelimit_limits!(data.oprish.ratelimits, info, message_create);
+        if data.effis.file_size.starts_with('0') {
+            panic!("Effis max file size cant be 0 or start with 0");
         }
         data
     }
