@@ -17,10 +17,25 @@ pub struct Conf {
 }
 
 /// Oprish config.
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct OprishConf {
     #[serde(default)]
     pub ratelimits: OprishRatelimits,
+    #[serde(default = "message_limit_default")]
+    pub message_limit: u32,
+}
+
+impl Default for OprishConf {
+    fn default() -> Self {
+        Self {
+            ratelimits: OprishRatelimits::default(),
+            message_limit: message_limit_default(),
+        }
+    }
+}
+
+fn message_limit_default() -> u32 {
+    2048
 }
 
 /// Oprish ratelimit config.
@@ -224,6 +239,7 @@ mod tests {
                     },
                     ..Default::default()
                 },
+                ..Default::default()
             },
             pandemonium: PandemoniumConf {
                 ratelimit: RatelimitData {
