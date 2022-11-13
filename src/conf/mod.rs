@@ -1,7 +1,10 @@
 //! Simple abstraction for a TOML based Eludris configuration file
-use std::{env, fs, path};
+mod oprish_ratelimits;
 
 use serde::{Deserialize, Serialize};
+use std::{env, fs, path};
+
+pub use oprish_ratelimits::OprishRatelimits;
 
 /// Eludris config.
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,7 +25,7 @@ pub struct OprishConf {
     #[serde(default)]
     pub ratelimits: OprishRatelimits,
     #[serde(default = "message_limit_default")]
-    pub message_limit: u32,
+    pub message_limit: usize,
 }
 
 impl Default for OprishConf {
@@ -34,40 +37,8 @@ impl Default for OprishConf {
     }
 }
 
-fn message_limit_default() -> u32 {
+fn message_limit_default() -> usize {
     2048
-}
-
-/// Oprish ratelimit config.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct OprishRatelimits {
-    #[serde(default = "info_ratelimit_default")]
-    info: RatelimitData,
-    #[serde(default = "message_create_ratelimit_default")]
-    message_create: RatelimitData,
-}
-
-impl Default for OprishRatelimits {
-    fn default() -> Self {
-        Self {
-            info: info_ratelimit_default(),
-            message_create: message_create_ratelimit_default(),
-        }
-    }
-}
-
-fn info_ratelimit_default() -> RatelimitData {
-    RatelimitData {
-        reset_after: 5,
-        limit: 2,
-    }
-}
-
-fn message_create_ratelimit_default() -> RatelimitData {
-    RatelimitData {
-        reset_after: 5,
-        limit: 10,
-    }
 }
 
 /// Pandemonium config.
@@ -195,7 +166,7 @@ impl Conf {
         if self.pandemonium.ratelimit.limit == 0 || self.effis.ratelimit.limit == 0 {
             Err("Ratelimit limit can't be 0")?;
         }
-        validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create);
+        validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
         if self.effis.file_size.starts_with('0') {
             Err("Effis max file size cant be 0 or start with 0")?;
         }
@@ -300,7 +271,8 @@ mod tests {
             conf.pandemonium.ratelimit,
             conf.effis.ratelimit,
             conf.oprish.ratelimits.info,
-            conf.oprish.ratelimits.message_create
+            conf.oprish.ratelimits.message_create,
+            conf.oprish.ratelimits.ratelimits
         );
     }
 }
