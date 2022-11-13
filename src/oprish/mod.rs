@@ -9,6 +9,13 @@ use rocket::{
 };
 use serde::{Deserialize, Serialize};
 
+/// The type for all responses in Oprish
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Response<T> {
+    Success(T),
+    Failure(ErrorResponse),
+}
+
 /// The type for all Error responses in Oprish
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -20,8 +27,11 @@ pub struct ErrorResponse {
 impl ErrorResponse {
     /// Crete a new ErrorResponse based on the type of the passed data
     pub fn new(data: ErrorResponseData) -> ErrorResponse {
-        let (message, status) = match data {
-            ErrorResponseData::RateLimited { .. } => ("You have been ratelimited".to_string(), 429),
+        let (message, status) = match &data {
+            ErrorResponseData::Ratelimited { .. } => ("You have been ratelimited".to_string(), 429),
+            ErrorResponseData::ValidationError { invalid_key } => {
+                (format!("Validation erro at {}", invalid_key), 400)
+            }
         };
         ErrorResponse {
             message,
@@ -40,7 +50,8 @@ impl ErrorResponse {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ErrorResponseData {
-    RateLimited { retry_after: u64 },
+    Ratelimited { retry_after: u64 },
+    ValidationError { invalid_key: String },
 }
 
 /// A type alias for the return type of routes which have ratelimits
