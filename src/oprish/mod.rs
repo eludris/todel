@@ -29,8 +29,8 @@ impl ErrorResponse {
     pub fn new(data: ErrorResponseData) -> ErrorResponse {
         let (message, status) = match &data {
             ErrorResponseData::Ratelimited { .. } => ("You have been ratelimited".to_string(), 429),
-            ErrorResponseData::ValidationError { invalid_key } => {
-                (format!("Validation erro at {}", invalid_key), 400)
+            ErrorResponseData::ValidationError { invalid_key, .. } => {
+                (format!("Validation error at {}", invalid_key), 400)
             }
         };
         ErrorResponse {
@@ -51,7 +51,7 @@ impl ErrorResponse {
 #[serde(untagged)]
 pub enum ErrorResponseData {
     Ratelimited { retry_after: u64 },
-    ValidationError { invalid_key: String },
+    ValidationError { invalid_key: String, info: String },
 }
 
 /// A type alias for the return type of routes which have ratelimits
