@@ -128,7 +128,7 @@ macro_rules! validate_ratelimit_limits {
         if $(
             $ratelimits.$bucket_name.limit == 0
             )||+ {
-            panic!("Ratelimit limit can't be 0");
+            Err("Ratelimit limit can't be 0")?;
         }
     };
 }
@@ -144,18 +144,7 @@ impl Conf {
     pub fn new<T: AsRef<path::Path>>(path: T) -> Self {
         let data = fs::read_to_string(path).unwrap();
         let data: Self = toml::from_str(&data).unwrap();
-        if let Some(description) = &data.description {
-            if description.is_empty() || description.len() > 2048 {
-                panic!("Invalid description length, must be between 1 and 2048 characters long");
-            }
-        }
-        if data.pandemonium.ratelimit.limit == 0 || data.effis.ratelimit.limit == 0 {
-            panic!("Ratelimit limit can't be 0");
-        }
-        validate_ratelimit_limits!(data.oprish.ratelimits, info, message_create);
-        if data.effis.file_size.starts_with('0') {
-            panic!("Effis max file size cant be 0 or start with 0");
-        }
+        data.validate().unwrap();
         data
     }
 
@@ -180,6 +169,23 @@ impl Conf {
             pandemonium: PandemoniumConf::default(),
             effis: EffisConf::default(),
         }
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if let Some(description) = &self.description {
+            if description.is_empty() || description.len() > 2048 {
+                Err("Invalid description length, must be between 1 and 2048 characters long")?;
+            }
+        }
+        if self.pandemonium.ratelimit.limit == 0 || self.effis.ratelimit.limit == 0 {
+            Err("Ratelimit limit can't be 0")?;
+        }
+        validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create);
+        if self.effis.file_size.starts_with('0') {
+            Err("Effis max file size cant be 0 or start with 0")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -247,5 +253,38 @@ mod tests {
         let conf = Conf::from_name("TestInstance".to_string());
 
         assert_eq!(format!("{:?}", conf_str), format!("{:?}", conf));
+    }
+
+    macro_rules! test_limit {
+        ($conf:expr, $($limit:expr),+) => {
+            $(
+                $limit.limit = 0;
+                assert!($conf.validate().is_err());
+                $limit.limit = 1;
+                assert!($conf.validate().is_ok());
+            )+
+        };
+    }
+
+    #[test]
+    fn validate() {
+        let mut conf = Conf::from_name("WooChat".to_string());
+
+        assert!(conf.validate().is_ok());
+        conf.description = Some("".to_string());
+
+        assert!(conf.validate().is_err());
+        conf.description = Some("h".repeat(2049));
+        assert!(conf.validate().is_err());
+        conf.description = Some("very cool".to_string());
+        assert!(conf.validate().is_ok());
+
+        test_limit!(
+            conf,
+            conf.pandemonium.ratelimit,
+            conf.effis.ratelimit,
+            conf.oprish.ratelimits.info,
+            conf.oprish.ratelimits.message_create
+        );
     }
 }
