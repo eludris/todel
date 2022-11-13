@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::RatelimitData;
 
 /// Oprish ratelimit config.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Copy, Serialize, Deserialize)]
 pub struct OprishRatelimits {
     #[serde(default = "info_default")]
     pub info: RatelimitData,
