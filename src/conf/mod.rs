@@ -85,14 +85,14 @@ fn file_size_default() -> String {
 }
 
 /// Ratelimit config data.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RatelimitData {
     pub reset_after: u32,
     pub limit: u32,
 }
 
 /// Effis ratelimit data config.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffisRatelimitData {
     pub reset_after: u32,
     pub limit: u32,
@@ -273,7 +273,6 @@ mod tests {
         assert!(conf.validate().is_err());
         conf.oprish.message_limit = 1024;
         assert!(conf.validate().is_ok());
-
 
         test_limit!(
             conf,
