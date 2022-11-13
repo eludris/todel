@@ -163,6 +163,9 @@ impl Conf {
                 Err("Invalid description length, must be between 1 and 2048 characters long")?;
             }
         }
+        if self.oprish.message_limit < 1024 {
+            Err("Message limit can not be less than 1024 characters")?;
+        }
         if self.pandemonium.ratelimit.limit == 0 || self.effis.ratelimit.limit == 0 {
             Err("Ratelimit limit can't be 0")?;
         }
@@ -265,6 +268,12 @@ mod tests {
         assert!(conf.validate().is_err());
         conf.description = Some("very cool".to_string());
         assert!(conf.validate().is_ok());
+
+        conf.oprish.message_limit = 2;
+        assert!(conf.validate().is_err());
+        conf.oprish.message_limit = 1024;
+        assert!(conf.validate().is_ok());
+
 
         test_limit!(
             conf,
