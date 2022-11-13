@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 /// The type for all responses in Oprish
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum Response<T> {
     Success(T),
     Failure(ErrorResponse),
@@ -69,8 +70,7 @@ pub enum ErrorResponseData {
 }
 
 /// A type alias for the return type of routes which have ratelimits
-pub type RatelimitedRoutResponse<T> =
-    Result<RatelimitHeaderWrapper<T>, (Status, Json<ErrorResponse>)>;
+pub type RatelimitedRoutResponse<T> = Result<RatelimitHeaderWrapper<T>, Json<ErrorResponse>>;
 
 /// A type that wraps a Response as to add ratelimit-relavent headers to it
 #[derive(Debug, Responder)]
