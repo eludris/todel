@@ -4,8 +4,8 @@ use rocket::{
     async_trait,
     http::{Header, Status},
     request::{FromRequest, Outcome, Request},
+    response::{self, Responder},
     serde::json::Json,
-    Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub enum Response<T> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub message: String,
-    pub status: u32,
+    pub status: u16,
     pub data: ErrorResponseData,
 }
 
@@ -39,10 +39,24 @@ impl ErrorResponse {
             data,
         }
     }
+}
 
-    /// Generate a respond coupled with a Status code
-    pub fn to_response(self) -> (Status, Json<ErrorResponse>) {
-        (Status::from_code(self.status as u16).unwrap(), Json(self))
+impl<'r> Responder<'r, 'static> for ErrorResponse {
+    fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+        let status = self.status;
+        response::Response::build_from(Json(self).respond_to(req)?)
+            .status(Status::from_code(status).unwrap())
+            .ok()
+    }
+}
+
+impl<'r, T: Responder<'r, 'static>> Responder<'r, 'static> for Response<T> {
+    fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+        match self {
+            Self::Success(v) => response::Response::build_from(v.respond_to(req)?),
+            Self::Failure(v) => response::Response::build_from(v.respond_to(req)?),
+        }
+        .ok()
     }
 }
 
