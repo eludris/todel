@@ -7,5 +7,6 @@ use super::Message;
 #[serde(tag = "op", content = "d")]
 pub enum Payload {
     Ping,
+    Pong,
     Message(Message),
 }
