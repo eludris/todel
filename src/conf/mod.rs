@@ -2,6 +2,7 @@
 mod oprish_ratelimits;
 
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "logic")]
 use std::{env, fs, path};
 
 pub use oprish_ratelimits::OprishRatelimits;
@@ -109,6 +110,7 @@ impl Default for EffisRatelimitData {
     }
 }
 
+#[cfg(feature = "logic")]
 macro_rules! validate_ratelimit_limits {
     ($ratelimits:expr, $($bucket_name:ident),+) => {
         if $(
@@ -119,6 +121,7 @@ macro_rules! validate_ratelimit_limits {
     };
 }
 
+#[cfg(feature = "logic")]
 impl Conf {
     /// Create a new [`Conf`].
     ///
@@ -178,6 +181,7 @@ impl Conf {
     }
 }
 
+#[cfg(feature = "logic")]
 #[cfg(test)]
 mod tests {
     use crate::conf::*;
