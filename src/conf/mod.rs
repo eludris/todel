@@ -254,7 +254,7 @@ mod tests {
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
 
-        let conf = Conf::from_name("TestInstance".to_string());
+        let conf = Conf::from_name("TestInstance".to_string()).unwrap();
 
         assert_eq!(format!("{:?}", conf_str), format!("{:?}", conf));
     }
