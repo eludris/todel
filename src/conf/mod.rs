@@ -1,6 +1,7 @@
 //! Simple abstraction for a TOML based Eludris configuration file
 mod oprish_ratelimits;
 
+use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "logic")]
 use std::{env, fs, path};
@@ -116,7 +117,7 @@ macro_rules! validate_ratelimit_limits {
         if $(
             $ratelimits.$bucket_name.limit == 0
             )||+ {
-            Err("Ratelimit limit can't be 0")?;
+            Err(anyhow!("Ratelimit limit can't be 0"))?;
         }
     };
 }
@@ -130,11 +131,14 @@ impl Conf {
     /// This function is *intended* to panic if a suitable config is not found.
     ///
     /// That also includes the config file's data failing to deserialise.
-    pub fn new<T: AsRef<path::Path>>(path: T) -> Self {
-        let data = fs::read_to_string(path).unwrap();
-        let data: Self = toml::from_str(&data).unwrap();
-        data.validate().unwrap();
-        data
+    pub fn new<T: AsRef<path::Path>>(path: T) -> anyhow::Result<Self> {
+        let data = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read file {}", path.as_ref().display()))?;
+        let data: Self = toml::from_str(&data).with_context(|| {
+            format!("Could not parse {} as valid toml", path.as_ref().display())
+        })?;
+        data.validate()?;
+        Ok(data)
     }
 
     /// Create a new [`Conf`] by determining it's path based on the "ELUDRIS_CONF" environment
@@ -145,36 +149,42 @@ impl Conf {
     /// This function is *intended* to panic if a suitable config is not found.
     ///
     /// That also includes the config file's data failing to deserialise.
-    pub fn new_from_env() -> Self {
+    pub fn new_from_env() -> anyhow::Result<Self> {
         Self::new(env::var("ELUDRIS_CONF").unwrap_or_else(|_| "Eludris.toml".to_string()))
     }
 
     /// Create a new [`Conf`] with default config from the provided instance name.
-    pub fn from_name(instance_name: String) -> Self {
-        Self {
+    pub fn from_name(instance_name: String) -> anyhow::Result<Self> {
+        let conf = Self {
             instance_name,
             description: None,
             oprish: OprishConf::default(),
             pandemonium: PandemoniumConf::default(),
             effis: EffisConf::default(),
-        }
+        };
+        conf.validate()?;
+        Ok(conf)
     }
 
-    fn validate(&self) -> Result<(), String> {
+    fn validate(&self) -> Result<(), anyhow::Error> {
         if let Some(description) = &self.description {
             if description.is_empty() || description.len() > 2048 {
-                Err("Invalid description length, must be between 1 and 2048 characters long")?;
+                Err(anyhow!(
+                    "Invalid description length, must be between 1 and 2048 characters long"
+                ))?;
             }
         }
         if self.oprish.message_limit < 1024 {
-            Err("Message limit can not be less than 1024 characters")?;
+            Err(anyhow!(
+                "Message limit can not be less than 1024 characters"
+            ))?;
         }
         if self.pandemonium.ratelimit.limit == 0 || self.effis.ratelimit.limit == 0 {
-            Err("Ratelimit limit can't be 0")?;
+            Err(anyhow!("Ratelimit limit can't be 0"))?;
         }
         validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
         if self.effis.file_size.starts_with('0') {
-            Err("Effis max file size cant be 0 or start with 0")?;
+            Err(anyhow!("Effis max file size cant be 0 or start with 0"))?;
         }
 
         Ok(())
@@ -262,7 +272,7 @@ mod tests {
 
     #[test]
     fn validate() {
-        let mut conf = Conf::from_name("WooChat".to_string());
+        let mut conf = Conf::from_name("WooChat".to_string()).unwrap();
 
         assert!(conf.validate().is_ok());
         conf.description = Some("".to_string());
