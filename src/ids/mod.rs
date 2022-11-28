@@ -36,8 +36,8 @@ pub struct IDGenerator {
 
 impl IDGenerator {
     /// Create a new IDGenerator from an instance ID.
-    pub fn new(instance_id: u64) -> IDGenerator {
-        IDGenerator {
+    pub fn new(instance_id: u64) -> Self {
+        Self {
             instance_id,
             sequence: 0,
         }
