@@ -5,10 +5,10 @@
 extern crate lazy_static;
 
 pub mod conf;
+#[cfg(feature = "http")]
+pub mod http;
 #[cfg(feature = "logic")]
 pub mod ids;
 pub mod models;
-#[cfg(feature = "http")]
-pub mod oprish;
 
 pub use conf::Conf;
