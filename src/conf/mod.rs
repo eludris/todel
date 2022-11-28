@@ -1,6 +1,7 @@
 //! Simple abstraction for a TOML based Eludris configuration file
 mod oprish_ratelimits;
 
+#[cfg(feature = "logic")]
 use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "logic")]
