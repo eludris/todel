@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 /// Base type for error responses
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
-    pub(crate) status: u16,
-    message: String,
-    data: ErrorData,
+    pub status: u16,
+    pub message: String,
+    pub data: ErrorData,
 }
 
 /// Preset error types
@@ -19,14 +19,14 @@ pub enum ErrorData {
 /// The error when a client is ratelimited
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RatelimitError {
-    retry_after: u64,
+    pub retry_after: u64,
 }
 
 /// The error when the supplied request body is invalid
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ValidationError {
-    field_name: String,
-    error: String,
+    pub field_name: String,
+    pub error: String,
 }
 
 #[cfg(feature = "logic")]
