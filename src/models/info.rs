@@ -6,4 +6,5 @@ pub struct InstanceInfo {
     pub instance_name: String,
     // This should be somewhere between 1 character and 2048 characters long
     pub description: Option<String>,
+    pub message_limit: usize,
 }
