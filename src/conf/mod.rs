@@ -78,7 +78,7 @@ pub struct EffisConf {
     #[serde(default = "attachment_file_size_default")]
     pub attachment_file_size: String,
     #[serde(default)]
-    pub ratelimits: EffisRatelimitData,
+    pub ratelimits: EffisRatelimits,
 }
 
 impl Default for EffisConf {
@@ -86,7 +86,7 @@ impl Default for EffisConf {
         Self {
             file_size: file_size_default(),
             attachment_file_size: attachment_file_size_default(),
-            ratelimits: EffisRatelimitData::default(),
+            ratelimits: EffisRatelimits::default(),
         }
     }
 }
@@ -108,7 +108,7 @@ pub struct RatelimitConf {
 
 /// Effis ratelimit data config.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EffisRatelimitData {
+pub struct EffisRatelimits {
     #[serde(default = "assets_default")]
     pub assets: EffisRatelimitConf,
     #[serde(default = "attachments_default")]
@@ -138,7 +138,7 @@ fn attachments_default() -> EffisRatelimitConf {
     }
 }
 
-impl Default for EffisRatelimitData {
+impl Default for EffisRatelimits {
     fn default() -> Self {
         Self {
             assets: assets_default(),
@@ -289,7 +289,7 @@ mod tests {
             },
             effis: EffisConf {
                 file_size: "100MB".to_string(),
-                ratelimits: EffisRatelimitData {
+                ratelimits: EffisRatelimits {
                     attachments: EffisRatelimitConf {
                         reset_after: 600,
                         limit: 20,
