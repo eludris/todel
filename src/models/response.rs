@@ -33,7 +33,7 @@ pub struct ValidationError {
 
 /// The error when the requested resource is not found.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct NotFoundError {}
+pub struct NotFoundError;
 
 #[cfg(feature = "logic")]
 /// The trait for valid error response data types
