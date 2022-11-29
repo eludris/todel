@@ -1,8 +1,12 @@
 //! Simple abstraction for a TOML based Eludris configuration file
 mod oprish_ratelimits;
 
+#[cfg(feature = "http")]
+use anyhow::anyhow;
 #[cfg(feature = "logic")]
-use anyhow::{anyhow, Context};
+use anyhow::{bail, Context};
+#[cfg(feature = "http")]
+use rocket::data::ByteUnit;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "logic")]
 use std::{env, fs, path};
@@ -71,7 +75,7 @@ fn pandemonium_ratelimit_default() -> RatelimitConf {
 pub struct EffisConf {
     #[serde(default = "file_size_default")]
     pub file_size: String,
-    #[serde(default)]
+    #[serde(default = "attachment_file_size_default")]
     pub attachment_file_size: String,
     #[serde(default)]
     pub ratelimits: EffisRatelimitData,
@@ -105,7 +109,9 @@ pub struct RatelimitConf {
 /// Effis ratelimit data config.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffisRatelimitData {
+    #[serde(default = "assets_default")]
     assets: EffisRatelimitConf,
+    #[serde(default = "attachments_default")]
     attachments: EffisRatelimitConf,
 }
 
@@ -147,8 +153,23 @@ macro_rules! validate_ratelimit_limits {
         if $(
             $ratelimits.$bucket_name.limit == 0
             )||+ {
-            Err(anyhow!("Ratelimit limit can't be 0"))?;
+            bail!("Ratelimit limit can't be 0");
         }
+    };
+}
+
+#[cfg(feature = "http")]
+macro_rules! validate_file_sizes {
+    ($($size:expr),+) => {
+       $(
+            let size: ByteUnit = $size
+            .parse()
+            .map_err(|err| anyhow!("{}", err))
+            .with_context(|| format!("Invalid file size limit {}", $size))?;
+            if size.as_u128() == 0 {
+                bail!("File size cannot be 0: {}", $size);
+            }
+       )+
     };
 }
 
@@ -199,22 +220,22 @@ impl Conf {
     fn validate(&self) -> Result<(), anyhow::Error> {
         if let Some(description) = &self.description {
             if description.is_empty() || description.len() > 2048 {
-                Err(anyhow!(
-                    "Invalid description length, must be between 1 and 2048 characters long"
-                ))?;
+                bail!("Invalid description length, must be between 1 and 2048 characters long");
             }
         }
         if self.oprish.message_limit < 1024 {
-            Err(anyhow!(
-                "Message limit can not be less than 1024 characters"
-            ))?;
+            bail!("Message limit can not be less than 1024 characters");
         }
         validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
         validate_ratelimit_limits!(self.pandemonium, ratelimit);
         validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments);
-        if self.effis.file_size.starts_with('0') {
-            Err(anyhow!("Effis max file size cant be 0 or start with 0"))?;
-        }
+        #[cfg(feature = "http")]
+        validate_file_sizes!(
+            self.effis.file_size,
+            self.effis.attachment_file_size,
+            self.effis.ratelimits.assets.file_size_limit,
+            self.effis.ratelimits.attachments.file_size_limit
+        );
 
         Ok(())
     }
@@ -240,7 +261,9 @@ mod tests {
 
             [effis]
             file_size = "100MB"
-            ratelimit = { reset_after = 600, limit = 20, file_size_limit = "500MB"}
+
+            [effis.ratelimits]
+            attachments = { reset_after = 600, limit = 20, file_size_limit = "500MB"}
             "#;
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
@@ -303,6 +326,20 @@ mod tests {
         };
     }
 
+    #[cfg(feature = "http")]
+    macro_rules! test_file_sizes {
+        ($conf:expr, $($size:expr),+) => {
+            $(
+                $size = "not a valid size".to_string();
+                assert!($conf.validate().is_err());
+                $size = "0MB".to_string();
+                assert!($conf.validate().is_err());
+                $size = "10MB".to_string();
+                assert!($conf.validate().is_ok());
+            )+
+        };
+    }
+
     #[test]
     fn validate() {
         let mut conf = Conf::from_name("WooChat".to_string()).unwrap();
@@ -329,6 +366,15 @@ mod tests {
             conf.oprish.ratelimits.info,
             conf.oprish.ratelimits.message_create,
             conf.oprish.ratelimits.ratelimits
+        );
+
+        #[cfg(feature = "http")]
+        test_file_sizes!(
+            conf,
+            conf.effis.file_size,
+            conf.effis.attachment_file_size,
+            conf.effis.ratelimits.assets.file_size_limit,
+            conf.effis.ratelimits.attachments.file_size_limit
         );
     }
 }
