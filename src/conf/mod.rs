@@ -110,9 +110,9 @@ pub struct RatelimitConf {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffisRatelimitData {
     #[serde(default = "assets_default")]
-    assets: EffisRatelimitConf,
+    pub assets: EffisRatelimitConf,
     #[serde(default = "attachments_default")]
-    attachments: EffisRatelimitConf,
+    pub attachments: EffisRatelimitConf,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
