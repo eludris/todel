@@ -9,5 +9,5 @@ use super::Message;
 pub enum Payload {
     Ping,
     Pong,
-    Message(Message),
+    MessageCreate(Message),
 }
