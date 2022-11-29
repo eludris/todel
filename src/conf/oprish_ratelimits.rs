@@ -1,16 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-use super::RatelimitData;
+use super::RatelimitConf;
 
 /// Oprish ratelimit config.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OprishRatelimits {
     #[serde(default = "info_default")]
-    pub info: RatelimitData,
+    pub info: RatelimitConf,
     #[serde(default = "message_create_default")]
-    pub message_create: RatelimitData,
+    pub message_create: RatelimitConf,
     #[serde(default = "ratelimits_default")]
-    pub ratelimits: RatelimitData,
+    pub ratelimits: RatelimitConf,
 }
 
 impl Default for OprishRatelimits {
@@ -23,22 +23,22 @@ impl Default for OprishRatelimits {
     }
 }
 
-fn info_default() -> RatelimitData {
-    RatelimitData {
+fn info_default() -> RatelimitConf {
+    RatelimitConf {
         reset_after: 5,
         limit: 2,
     }
 }
 
-fn message_create_default() -> RatelimitData {
-    RatelimitData {
+fn message_create_default() -> RatelimitConf {
+    RatelimitConf {
         reset_after: 5,
         limit: 10,
     }
 }
 
-fn ratelimits_default() -> RatelimitData {
-    RatelimitData {
+fn ratelimits_default() -> RatelimitConf {
+    RatelimitConf {
         reset_after: 5,
         limit: 2,
     }

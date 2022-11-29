@@ -48,7 +48,7 @@ fn message_limit_default() -> usize {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PandemoniumConf {
     #[serde(default = "pandemonium_ratelimit_default")]
-    pub ratelimit: RatelimitData,
+    pub ratelimit: RatelimitConf,
 }
 
 impl Default for PandemoniumConf {
@@ -59,8 +59,8 @@ impl Default for PandemoniumConf {
     }
 }
 
-fn pandemonium_ratelimit_default() -> RatelimitData {
-    RatelimitData {
+fn pandemonium_ratelimit_default() -> RatelimitConf {
+    RatelimitConf {
         reset_after: 10,
         limit: 5,
     }
@@ -69,27 +69,35 @@ fn pandemonium_ratelimit_default() -> RatelimitData {
 /// Effis config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EffisConf {
+    #[serde(default = "file_size_default")]
     pub file_size: String,
     #[serde(default)]
-    pub ratelimit: EffisRatelimitData,
+    pub attachment_file_size: String,
+    #[serde(default)]
+    pub ratelimits: EffisRatelimitData,
 }
 
 impl Default for EffisConf {
     fn default() -> Self {
         Self {
             file_size: file_size_default(),
-            ratelimit: EffisRatelimitData::default(),
+            attachment_file_size: attachment_file_size_default(),
+            ratelimits: EffisRatelimitData::default(),
         }
     }
 }
 
 fn file_size_default() -> String {
+    "20MB".to_string()
+}
+
+fn attachment_file_size_default() -> String {
     "100MB".to_string()
 }
 
 /// Ratelimit config data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RatelimitData {
+pub struct RatelimitConf {
     pub reset_after: u32,
     pub limit: u32,
 }
@@ -97,17 +105,38 @@ pub struct RatelimitData {
 /// Effis ratelimit data config.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffisRatelimitData {
+    assets: EffisRatelimitConf,
+    attachments: EffisRatelimitConf,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EffisRatelimitConf {
     pub reset_after: u32,
     pub limit: u32,
     pub file_size_limit: String,
 }
 
+fn assets_default() -> EffisRatelimitConf {
+    EffisRatelimitConf {
+        reset_after: 60,
+        limit: 5,
+        file_size_limit: "30MB".to_string(),
+    }
+}
+
+fn attachments_default() -> EffisRatelimitConf {
+    EffisRatelimitConf {
+        reset_after: 180,
+        limit: 20,
+        file_size_limit: "500MB".to_string(),
+    }
+}
+
 impl Default for EffisRatelimitData {
     fn default() -> Self {
         Self {
-            reset_after: 10,
-            limit: 25,
-            file_size_limit: "200MB".to_string(),
+            assets: assets_default(),
+            attachments: attachments_default(),
         }
     }
 }
@@ -180,10 +209,9 @@ impl Conf {
                 "Message limit can not be less than 1024 characters"
             ))?;
         }
-        if self.pandemonium.ratelimit.limit == 0 || self.effis.ratelimit.limit == 0 {
-            Err(anyhow!("Ratelimit limit can't be 0"))?;
-        }
         validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
+        validate_ratelimit_limits!(self.pandemonium, ratelimit);
+        validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments);
         if self.effis.file_size.starts_with('0') {
             Err(anyhow!("Effis max file size cant be 0 or start with 0"))?;
         }
@@ -212,7 +240,7 @@ mod tests {
 
             [effis]
             file_size = "100MB"
-            ratelimit = { reset_after = 10, limit = 2, file_size_limit = "500MB"}
+            ratelimit = { reset_after = 600, limit = 20, file_size_limit = "500MB"}
             "#;
 
         let conf_str: Conf = toml::from_str(conf_str).unwrap();
@@ -222,7 +250,7 @@ mod tests {
             description: Some("The poggest place to chat".to_string()),
             oprish: OprishConf {
                 ratelimits: OprishRatelimits {
-                    info: RatelimitData {
+                    info: RatelimitConf {
                         reset_after: 10,
                         limit: 2,
                     },
@@ -231,18 +259,22 @@ mod tests {
                 ..Default::default()
             },
             pandemonium: PandemoniumConf {
-                ratelimit: RatelimitData {
+                ratelimit: RatelimitConf {
                     reset_after: 20,
                     limit: 10,
                 },
             },
             effis: EffisConf {
                 file_size: "100MB".to_string(),
-                ratelimit: EffisRatelimitData {
-                    reset_after: 10,
-                    limit: 2,
-                    file_size_limit: "500MB".to_string(),
+                ratelimits: EffisRatelimitData {
+                    attachments: EffisRatelimitConf {
+                        reset_after: 600,
+                        limit: 20,
+                        file_size_limit: "500MB".to_string(),
+                    },
+                    ..Default::default()
                 },
+                ..Default::default()
             },
         };
 
@@ -292,7 +324,8 @@ mod tests {
         test_limit!(
             conf,
             conf.pandemonium.ratelimit,
-            conf.effis.ratelimit,
+            conf.effis.ratelimits.assets,
+            conf.effis.ratelimits.attachments,
             conf.oprish.ratelimits.info,
             conf.oprish.ratelimits.message_create,
             conf.oprish.ratelimits.ratelimits
