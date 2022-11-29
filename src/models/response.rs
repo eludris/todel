@@ -95,7 +95,7 @@ impl ErrorResponseData for NotFoundError {
     fn to_error_response(self) -> ErrorResponse {
         ErrorResponse {
             status: 404,
-            message: "The requestes resource cannot be found".to_string(),
+            message: "The requested resource cannot be found".to_string(),
             data: None,
         }
     }
