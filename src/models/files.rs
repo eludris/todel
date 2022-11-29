@@ -21,7 +21,17 @@ fn is_false(value: &bool) -> bool {
 #[serde(tag = "type")]
 pub enum FileMetadata {
     Text,
-    Image { width: u32, height: u32 },
-    Video { width: u32, height: u32 },
+    Image {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        width: Option<usize>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        height: Option<usize>,
+    },
+    Video {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        width: Option<usize>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        height: Option<usize>,
+    },
     Other,
 }
