@@ -39,7 +39,7 @@ fn attachments_default() -> EffisRatelimitConf {
 fn fetch_file_default() -> RatelimitConf {
     RatelimitConf {
         reset_after: 60,
-        limit: 10,
+        limit: 30,
     }
 }
 
