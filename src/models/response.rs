@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct ErrorResponse {
     pub status: u16,
     pub message: String,
-    pub data: ErrorData,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<ErrorData>,
 }
 
 /// Preset error types
@@ -14,6 +15,7 @@ pub struct ErrorResponse {
 pub enum ErrorData {
     RatelimitedError(RatelimitError),
     ValidationError(ValidationError),
+    NotFoundError(NotFoundError),
 }
 
 /// The error when a client is ratelimited
@@ -29,6 +31,10 @@ pub struct ValidationError {
     pub error: String,
 }
 
+/// The error when the requested resource is not found.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NotFoundError {}
+
 #[cfg(feature = "logic")]
 /// The trait for valid error response data types
 pub trait ErrorResponseData {
@@ -41,7 +47,7 @@ impl ErrorResponseData for RatelimitError {
         ErrorResponse {
             status: 429,
             message: "You have been ratelimited".to_string(),
-            data: ErrorData::RatelimitedError(self),
+            data: Some(ErrorData::RatelimitedError(self)),
         }
     }
 }
@@ -52,7 +58,18 @@ impl ErrorResponseData for ValidationError {
         ErrorResponse {
             status: 422,
             message: "Invalid request body".to_string(),
-            data: ErrorData::ValidationError(self),
+            data: Some(ErrorData::ValidationError(self)),
+        }
+    }
+}
+
+#[cfg(feature = "logic")]
+impl ErrorResponseData for NotFoundError {
+    fn to_error_response(self) -> ErrorResponse {
+        ErrorResponse {
+            status: 404,
+            message: "The requestes resource cannot be found".to_string(),
+            data: None,
         }
     }
 }
