@@ -113,6 +113,8 @@ pub struct EffisRatelimits {
     pub assets: EffisRatelimitConf,
     #[serde(default = "attachments_default")]
     pub attachments: EffisRatelimitConf,
+    #[serde(default = "fetch_file_default")]
+    pub fetch_file: RatelimitConf,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -138,11 +140,19 @@ fn attachments_default() -> EffisRatelimitConf {
     }
 }
 
+fn fetch_file_default() -> RatelimitConf {
+    RatelimitConf {
+        reset_after: 60,
+        limit: 10,
+    }
+}
+
 impl Default for EffisRatelimits {
     fn default() -> Self {
         Self {
             assets: assets_default(),
             attachments: attachments_default(),
+            fetch_file: fetch_file_default(),
         }
     }
 }
@@ -228,7 +238,7 @@ impl Conf {
         }
         validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
         validate_ratelimit_limits!(self.pandemonium, ratelimit);
-        validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments);
+        validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments, fetch_file);
         #[cfg(feature = "http")]
         validate_file_sizes!(
             self.effis.file_size,
@@ -363,6 +373,7 @@ mod tests {
             conf.pandemonium.ratelimit,
             conf.effis.ratelimits.assets,
             conf.effis.ratelimits.attachments,
+            conf.effis.ratelimits.fetch_file,
             conf.oprish.ratelimits.info,
             conf.oprish.ratelimits.message_create,
             conf.oprish.ratelimits.ratelimits
