@@ -17,6 +17,7 @@ pub enum ErrorData {
     FileSizeRatelimitedError(FileSizeRatelimitedError),
     ValidationError(ValidationError),
     NotFoundError(NotFoundError),
+    ServerError(ServerError),
 }
 
 /// The error when a client is ratelimited
@@ -43,6 +44,12 @@ pub struct ValidationError {
 /// The error when the requested resource is not found.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotFoundError;
+
+/// The error when the requested resource is not found.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ServerError {
+    pub error: String,
+}
 
 #[cfg(feature = "logic")]
 /// The trait for valid error response data types
@@ -90,6 +97,18 @@ impl ErrorResponseData for NotFoundError {
             status: 404,
             message: "The requestes resource cannot be found".to_string(),
             data: None,
+        }
+    }
+}
+
+#[cfg(feature = "logic")]
+impl ErrorResponseData for ServerError {
+    fn to_error_response(self) -> ErrorResponse {
+        ErrorResponse {
+            status: 500,
+            message: "The server encountered an error while performing the requested action"
+                .to_string(),
+            data: Some(ErrorData::ServerError(self)),
         }
     }
 }
