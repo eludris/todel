@@ -18,6 +18,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 #[serde(tag = "type")]
 pub enum FileMetadata {
     Text,
