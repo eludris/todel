@@ -21,11 +21,10 @@ projects with mind, add it to your own project either by:
 
 ## Features
 
-Todel comes with 2 main features, `logic` which is enabled by default and provides
-the logic-related implementation to the models and also some types which are not
-used directly by the Eludris API and `http` which houses the rocket-reliant logic
-and models.
+Todel comes with 2 main features, `logic` which provides the logic-related implementation
+to the models and also some types which are not used directly by the Eludris API
+and `http` which houses the rocket-reliant logic and models.
 
 If you just need the models (which will be the case most of the time) then you
-can disable the default features, all the models derive the `Debug`, `serde::Serialize`
+can add todel with no extra features, all the models derive the `Debug`, `serde::Serialize`
 and `serde::Deserialize` traits.
