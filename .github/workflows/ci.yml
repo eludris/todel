@@ -29,6 +29,10 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
+    env:
+      RUST_LOG: "trace"
+      DATABASE_URL: "mysql://root:root@localhost:3306/eludris"
+      SQLX_OFFLINE: 1
 
     steps:
       - uses: actions/checkout@v2
@@ -39,6 +43,8 @@ jobs:
           toolchain: stable
           override: true
 
+      - run: docker-compose -f tests/docker-compose.yml up -d
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -46,11 +52,14 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features
 
   clippy:
     name: Clippy; Destroyer of Realities.
     runs-on: ubuntu-latest
+    env:
+      RUST_LOG: "trace"
+      DATABASE_URL: "mysql://root:root@localhost:3306/eludris"
+      SQLX_OFFLINE: 1
 
     steps:
       - uses: actions/checkout@v2
@@ -62,8 +71,14 @@ jobs:
           override: true
           components: clippy
 
+      - run: docker-compose -f tests/docker-compose.yml up -d
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-features -- -D warnings
+          args: -- -D warnings
 
