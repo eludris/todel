@@ -2,15 +2,19 @@
 mod effis_ratelimits;
 mod oprish_ratelimits;
 
+use serde::{Deserialize, Serialize};
+
 #[cfg(feature = "http")]
 use anyhow::anyhow;
-#[cfg(feature = "logic")]
-use anyhow::{bail, Context};
 #[cfg(feature = "http")]
 use rocket::data::ByteUnit;
-use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "logic")]
+use anyhow::{bail, Context};
 #[cfg(feature = "logic")]
 use std::{env, fs, path};
+#[cfg(feature = "logic")]
+use url::Url;
 
 pub use effis_ratelimits::*;
 pub use oprish_ratelimits::*;
@@ -196,6 +200,17 @@ impl Conf {
         validate_ratelimit_limits!(self.oprish.ratelimits, info, message_create, ratelimits);
         validate_ratelimit_limits!(self.pandemonium, ratelimit);
         validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments, fetch_file);
+
+        if let Some(url) = &self.oprish.url {
+            Url::parse(url).with_context(|| format!("Invalid oprish url {}", url))?;
+        }
+        if let Some(url) = &self.pandemonium.url {
+            Url::parse(url).with_context(|| format!("Invalid pandemonium url {}", url))?;
+        }
+        if let Some(url) = &self.effis.url {
+            Url::parse(url).with_context(|| format!("Invalid effis url {}", url))?;
+        }
+
         #[cfg(feature = "http")]
         validate_file_sizes!(
             self.effis.file_size,
@@ -295,6 +310,18 @@ mod tests {
         };
     }
 
+    macro_rules! test_urls {
+        ($conf:expr, $($service:ident),+) => {
+            $(
+                assert!($conf.validate().is_ok());
+                $conf.$service.url = Some("notavalidurl".to_string());
+                assert!($conf.validate().is_err());
+                $conf.$service.url = Some("http://avalid.url".to_string());
+                assert!($conf.validate().is_ok());
+            )+
+        };
+    }
+
     #[cfg(feature = "http")]
     macro_rules! test_file_sizes {
         ($conf:expr, $($size:expr),+) => {
@@ -337,6 +364,8 @@ mod tests {
             conf.oprish.ratelimits.message_create,
             conf.oprish.ratelimits.ratelimits
         );
+
+        test_urls!(conf, oprish, pandemonium, effis);
 
         #[cfg(feature = "http")]
         test_file_sizes!(
