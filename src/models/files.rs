@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 
+/// The data Effis provides for files
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileData {
@@ -17,6 +18,7 @@ fn is_false(value: &bool) -> bool {
     !value
 }
 
+/// The enum representing all the possible Effis supported file metadatas
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "type")]

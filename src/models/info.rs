@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// The instance info payload.
+/// The instance info payload
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InstanceInfo {
     pub instance_name: String,

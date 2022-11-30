@@ -41,11 +41,11 @@ pub struct ValidationError {
     pub error: String,
 }
 
-/// The error when the requested resource is not found.
+/// The error when the requested resource is not found
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotFoundError;
 
-/// The error when the requested resource is not found.
+/// The error when the requested resource is not found
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ServerError {
     pub error: String,
