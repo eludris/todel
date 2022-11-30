@@ -323,23 +323,29 @@ AND bucket = ?
         }
 
         fn get_file_data(self) -> FileData {
-            let metadata = if self.width.is_some() && self.height.is_some() {
-                match self.content_type.as_ref() {
-                    "image/gif" | "image/jpeg" | "image/png" | "image/webp" => {
+            let metadata = match self.content_type.as_ref() {
+                "image/gif" | "image/jpeg" | "image/png" | "image/webp" => {
+                    if self.width.is_some() && self.height.is_some() {
                         FileMetadata::Image {
                             width: self.width,
                             height: self.height,
                         }
+                    } else {
+                        FileMetadata::Other
                     }
-                    "video/mp4" | "video/webm" | "video/quicktime" => FileMetadata::Video {
-                        width: self.width,
-                        height: self.height,
-                    },
-                    _ if self.content_type.starts_with("text") => FileMetadata::Text,
-                    _ => FileMetadata::Other,
                 }
-            } else {
-                FileMetadata::Other
+                "video/mp4" | "video/webm" | "video/quicktime" => {
+                    if self.width.is_some() && self.height.is_some() {
+                        FileMetadata::Video {
+                            width: self.width,
+                            height: self.height,
+                        }
+                    } else {
+                        FileMetadata::Other
+                    }
+                }
+                _ if self.content_type.starts_with("text") => FileMetadata::Text,
+                _ => FileMetadata::Other,
             };
 
             FileData {
