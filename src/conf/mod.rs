@@ -85,9 +85,9 @@ fn pandemonium_ratelimit_default() -> RatelimitConf {
 pub struct EffisConf {
     #[serde(default = "file_size_default")]
     pub file_size: String,
-    pub url: Option<String>,
     #[serde(default = "attachment_file_size_default")]
     pub attachment_file_size: String,
+    pub url: Option<String>,
     #[serde(default)]
     pub ratelimits: EffisRatelimits,
 }
