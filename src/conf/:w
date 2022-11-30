@@ -31,19 +31,19 @@ pub struct Conf {
 /// Oprish config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OprishConf {
+    #[serde(default)]
+    pub ratelimits: OprishRatelimits,
     #[serde(default = "message_limit_default")]
     pub message_limit: usize,
     pub url: Option<String>,
-    #[serde(default)]
-    pub ratelimits: OprishRatelimits,
 }
 
 impl Default for OprishConf {
     fn default() -> Self {
         Self {
-            url: None,
-            message_limit: message_limit_default(),
             ratelimits: OprishRatelimits::default(),
+            message_limit: message_limit_default(),
+            url: None,
         }
     }
 }
@@ -55,16 +55,16 @@ fn message_limit_default() -> usize {
 /// Pandemonium config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PandemoniumConf {
-    pub url: Option<String>,
     #[serde(default = "pandemonium_ratelimit_default")]
     pub ratelimit: RatelimitConf,
+    pub url: Option<String>,
 }
 
 impl Default for PandemoniumConf {
     fn default() -> Self {
         Self {
-            url: None,
             ratelimit: pandemonium_ratelimit_default(),
+            url: None,
         }
     }
 }
@@ -81,11 +81,11 @@ fn pandemonium_ratelimit_default() -> RatelimitConf {
 pub struct EffisConf {
     #[serde(default = "file_size_default")]
     pub file_size: String,
-    pub url: Option<String>,
     #[serde(default = "attachment_file_size_default")]
     pub attachment_file_size: String,
     #[serde(default)]
     pub ratelimits: EffisRatelimits,
+    pub url: Option<String>,
 }
 
 fn file_size_default() -> String {
@@ -100,9 +100,9 @@ impl Default for EffisConf {
     fn default() -> Self {
         Self {
             file_size: file_size_default(),
-            url: None,
             attachment_file_size: attachment_file_size_default(),
             ratelimits: EffisRatelimits::default(),
+            url: None,
         }
     }
 }
@@ -224,7 +224,6 @@ mod tests {
             info = { reset_after = 10, limit = 2}
 
             [pandemonium]
-            url = "wss://foo.bar"
             ratelimit = { reset_after = 20, limit = 10}
 
             [effis]
@@ -254,7 +253,6 @@ mod tests {
                     reset_after: 20,
                     limit: 10,
                 },
-                url: Some("wss://foo.bar".to_string()),
             },
             effis: EffisConf {
                 file_size: "100MB".to_string(),
