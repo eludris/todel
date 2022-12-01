@@ -4,11 +4,6 @@ mod oprish_ratelimits;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "http")]
-use anyhow::anyhow;
-#[cfg(feature = "http")]
-use rocket::data::ByteUnit;
-
 #[cfg(feature = "logic")]
 use anyhow::{bail, Context};
 #[cfg(feature = "logic")]
@@ -83,21 +78,23 @@ fn pandemonium_ratelimit_default() -> RatelimitConf {
 /// Effis config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EffisConf {
+    #[serde(deserialize_with = "deserialize_file_size")]
     #[serde(default = "file_size_default")]
-    pub file_size: String,
+    pub file_size: u64,
+    #[serde(deserialize_with = "deserialize_file_size")]
     #[serde(default = "attachment_file_size_default")]
-    pub attachment_file_size: String,
+    pub attachment_file_size: u64,
     pub url: String,
     #[serde(default)]
     pub ratelimits: EffisRatelimits,
 }
 
-fn file_size_default() -> String {
-    "20MB".to_string()
+fn file_size_default() -> u64 {
+    20_000_000 // 20MB
 }
 
-fn attachment_file_size_default() -> String {
-    "100MB".to_string()
+fn attachment_file_size_default() -> u64 {
+    100_000_000 // 100MB
 }
 
 impl Default for EffisConf {
@@ -129,18 +126,14 @@ macro_rules! validate_ratelimit_limits {
     };
 }
 
-#[cfg(feature = "http")]
+#[cfg(feature = "logic")]
 macro_rules! validate_file_sizes {
     ($($size:expr),+) => {
-       $(
-            let size: ByteUnit = $size
-            .parse()
-            .map_err(|err| anyhow!("{}", err))
-            .with_context(|| format!("Invalid file size limit {}", $size))?;
-            if size.as_u128() == 0 {
-                bail!("File size cannot be 0: {}", $size);
-            }
-       )+
+        if $(
+            $size == 0
+            )||+ {
+            bail!("File size can't be 0");
+        }
     };
 }
 
@@ -211,7 +204,6 @@ impl Conf {
         Url::parse(&self.effis.url)
             .with_context(|| format!("Invalid effis url {}", self.effis.url))?;
 
-        #[cfg(feature = "http")]
         validate_file_sizes!(
             self.effis.file_size,
             self.effis.attachment_file_size,
@@ -276,12 +268,12 @@ mod tests {
                 url: "wss://foo.bar".to_string(),
             },
             effis: EffisConf {
-                file_size: "100MB".to_string(),
+                file_size: 100_000_000,
                 ratelimits: EffisRatelimits {
                     attachments: EffisRatelimitConf {
                         reset_after: 600,
                         limit: 20,
-                        file_size_limit: "500MB".to_string(),
+                        file_size_limit: 500_000_000,
                     },
                     ..Default::default()
                 },
@@ -325,15 +317,12 @@ mod tests {
         };
     }
 
-    #[cfg(feature = "http")]
     macro_rules! test_file_sizes {
         ($conf:expr, $($size:expr),+) => {
             $(
-                $size = "not a valid size".to_string();
+                $size = 0;
                 assert!($conf.validate().is_err());
-                $size = "0MB".to_string();
-                assert!($conf.validate().is_err());
-                $size = "10MB".to_string();
+                $size = 1;
                 assert!($conf.validate().is_ok());
             )+
         };
@@ -376,7 +365,6 @@ mod tests {
 
         test_urls!(conf, oprish, pandemonium, effis);
 
-        #[cfg(feature = "http")]
         test_file_sizes!(
             conf,
             conf.effis.file_size,

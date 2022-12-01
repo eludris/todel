@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+use ubyte::ByteUnit;
 
 use super::RatelimitConf;
 
@@ -17,14 +18,15 @@ pub struct EffisRatelimits {
 pub struct EffisRatelimitConf {
     pub reset_after: u32,
     pub limit: u32,
-    pub file_size_limit: String,
+    #[serde(deserialize_with = "deserialize_file_size")]
+    pub file_size_limit: u64,
 }
 
 fn assets_default() -> EffisRatelimitConf {
     EffisRatelimitConf {
         reset_after: 60,
         limit: 5,
-        file_size_limit: "30MB".to_string(),
+        file_size_limit: 30_000_000, // 30MB
     }
 }
 
@@ -32,7 +34,7 @@ fn attachments_default() -> EffisRatelimitConf {
     EffisRatelimitConf {
         reset_after: 180,
         limit: 20,
-        file_size_limit: "500MB".to_string(),
+        file_size_limit: 500_000_000, // 500MB
     }
 }
 
@@ -51,4 +53,11 @@ impl Default for EffisRatelimits {
             fetch_file: fetch_file_default(),
         }
     }
+}
+
+pub(crate) fn deserialize_file_size<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(ByteUnit::deserialize(deserializer)?.as_u64())
 }

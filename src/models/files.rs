@@ -318,7 +318,7 @@ AND bucket = ?
             bucket: &'a str,
             db: &mut PoolConnection<MySql>,
         ) -> Result<FileData, ErrorResponse> {
-            Self::get(id, &bucket, db)
+            Self::get(id, bucket, db)
                 .await
                 .ok_or_else(|| NotFoundError.to_error_response())
                 .map(|f| f.get_file_data())
