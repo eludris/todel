@@ -37,7 +37,7 @@ pub struct Conf {
 pub struct OprishConf {
     #[serde(default = "message_limit_default")]
     pub message_limit: usize,
-    pub url: Option<String>,
+    pub url: String,
     #[serde(default)]
     pub ratelimits: OprishRatelimits,
 }
@@ -45,7 +45,7 @@ pub struct OprishConf {
 impl Default for OprishConf {
     fn default() -> Self {
         Self {
-            url: None,
+            url: "https://example.com".to_string(),
             message_limit: message_limit_default(),
             ratelimits: OprishRatelimits::default(),
         }
@@ -59,7 +59,7 @@ fn message_limit_default() -> usize {
 /// Pandemonium config.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PandemoniumConf {
-    pub url: Option<String>,
+    pub url: String,
     #[serde(default = "pandemonium_ratelimit_default")]
     pub ratelimit: RatelimitConf,
 }
@@ -67,7 +67,7 @@ pub struct PandemoniumConf {
 impl Default for PandemoniumConf {
     fn default() -> Self {
         Self {
-            url: None,
+            url: "https://example.com".to_string(),
             ratelimit: pandemonium_ratelimit_default(),
         }
     }
@@ -87,7 +87,7 @@ pub struct EffisConf {
     pub file_size: String,
     #[serde(default = "attachment_file_size_default")]
     pub attachment_file_size: String,
-    pub url: Option<String>,
+    pub url: String,
     #[serde(default)]
     pub ratelimits: EffisRatelimits,
 }
@@ -104,7 +104,7 @@ impl Default for EffisConf {
     fn default() -> Self {
         Self {
             file_size: file_size_default(),
-            url: None,
+            url: "https://example.com".to_string(),
             attachment_file_size: attachment_file_size_default(),
             ratelimits: EffisRatelimits::default(),
         }
@@ -201,15 +201,12 @@ impl Conf {
         validate_ratelimit_limits!(self.pandemonium, ratelimit);
         validate_ratelimit_limits!(self.effis.ratelimits, assets, attachments, fetch_file);
 
-        if let Some(url) = &self.oprish.url {
-            Url::parse(url).with_context(|| format!("Invalid oprish url {}", url))?;
-        }
-        if let Some(url) = &self.pandemonium.url {
-            Url::parse(url).with_context(|| format!("Invalid pandemonium url {}", url))?;
-        }
-        if let Some(url) = &self.effis.url {
-            Url::parse(url).with_context(|| format!("Invalid effis url {}", url))?;
-        }
+        Url::parse(&self.oprish.url)
+            .with_context(|| format!("Invalid oprish url {}", self.oprish.url))?;
+        Url::parse(&self.pandemonium.url)
+            .with_context(|| format!("Invalid pandemonium url {}", self.pandemonium.url))?;
+        Url::parse(&self.effis.url)
+            .with_context(|| format!("Invalid effis url {}", self.effis.url))?;
 
         #[cfg(feature = "http")]
         validate_file_sizes!(
@@ -235,6 +232,9 @@ mod tests {
             instance_name = "WooChat"
             description = "The poggest place to chat"
 
+            [oprish]
+            url = "https://example.com"
+
             [oprish.ratelimits]
             info = { reset_after = 10, limit = 2}
 
@@ -244,6 +244,7 @@ mod tests {
 
             [effis]
             file_size = "100MB"
+            url = "https://example.com"
 
             [effis.ratelimits]
             attachments = { reset_after = 600, limit = 20, file_size_limit = "500MB"}
@@ -269,7 +270,7 @@ mod tests {
                     reset_after: 20,
                     limit: 10,
                 },
-                url: Some("wss://foo.bar".to_string()),
+                url: "wss://foo.bar".to_string(),
             },
             effis: EffisConf {
                 file_size: "100MB".to_string(),
@@ -313,10 +314,9 @@ mod tests {
     macro_rules! test_urls {
         ($conf:expr, $($service:ident),+) => {
             $(
-                assert!($conf.validate().is_ok());
-                $conf.$service.url = Some("notavalidurl".to_string());
+                $conf.$service.url = "notavalidurl".to_string();
                 assert!($conf.validate().is_err());
-                $conf.$service.url = Some("http://avalid.url".to_string());
+                $conf.$service.url = "http://avalid.url".to_string();
                 assert!($conf.validate().is_ok());
             )+
         };
