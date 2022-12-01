@@ -189,6 +189,9 @@ impl Conf {
     }
 
     fn validate(&self) -> Result<(), anyhow::Error> {
+        if self.instance_name.is_empty() || self.instance_name.len() > 32 {
+            bail!("Invalid instance_name length, must be between 1 and 32 characters long");
+        }
         if let Some(description) = &self.description {
             if description.is_empty() || description.len() > 2048 {
                 bail!("Invalid description length, must be between 1 and 2048 characters long");
@@ -341,8 +344,14 @@ mod tests {
         let mut conf = Conf::from_name("WooChat".to_string()).unwrap();
 
         assert!(conf.validate().is_ok());
-        conf.description = Some("".to_string());
+        conf.instance_name = "".to_string();
+        assert!(conf.validate().is_err());
+        conf.instance_name = "h".repeat(33);
+        assert!(conf.validate().is_err());
+        conf.instance_name = "woo".to_string();
+        assert!(conf.validate().is_ok());
 
+        conf.description = Some("".to_string());
         assert!(conf.validate().is_err());
         conf.description = Some("h".repeat(2049));
         assert!(conf.validate().is_err());
