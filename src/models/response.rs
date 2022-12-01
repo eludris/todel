@@ -31,7 +31,7 @@ pub struct RatelimitError {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileSizeRatelimitedError {
     pub retry_after: u64,
-    pub bytes_left: u128,
+    pub bytes_left: u64,
 }
 
 /// The error when the supplied request body is invalid
