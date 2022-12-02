@@ -63,7 +63,8 @@ mod file_logic {
 
     use crate::ids::IDGenerator;
     use crate::models::{
-        ErrorResponse, ErrorResponseData, FileData, FileMetadata, NotFoundError, ValidationError,
+        ErrorResponse, ErrorResponseData, FileData, FileMetadata, NotFoundError, ServerError,
+        ValidationError,
     };
     use image::io::Reader as ImageReader;
     use sqlx::{pool::PoolConnection, MySql};
@@ -141,7 +142,7 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
 
                 Self {
                     id,
-                    file_id: file_id.parse::<u128>().unwrap(),
+                    file_id: file_id.parse().unwrap(),
                     name,
                     content_type,
                     hash,
@@ -156,13 +157,45 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                     let (width, height) = match mime.as_ref() {
                         "image/gif" | "image/jpeg" | "image/png" | "image/webp" => {
                             if mime == "image/jepg" {
-                                // if something fails here we *want* the server to 500
                                 ImageReader::open(&path)
-                                    .unwrap()
+                                    .map_err(|e| {
+                                        log::error!(
+                                            "Failed to strip file metadata on {} with id {}: {:?}",
+                                            name,
+                                            id,
+                                            e
+                                        );
+                                        ServerError {
+                                            error: "Failed to strip file metadata".to_string(),
+                                        }
+                                        .to_error_response()
+                                    })?
                                     .decode()
-                                    .unwrap()
+                                    .map_err(|e| {
+                                        log::error!(
+                                            "Failed to strip file metadata on {} with id {}: {:?}",
+                                            name,
+                                            id,
+                                            e
+                                        );
+                                        ServerError {
+                                            error: "Failed to strip file metadata".to_string(),
+                                        }
+                                        .to_error_response()
+                                    })?
                                     .save(&path)
-                                    .unwrap();
+                                    .map_err(|e| {
+                                        log::error!(
+                                            "Failed to strip file metadata on {} with id {}: {:?}",
+                                            name,
+                                            id,
+                                            e
+                                        );
+                                        ServerError {
+                                            error: "Failed to strip file metadata".to_string(),
+                                        }
+                                        .to_error_response()
+                                    })?;
                             }
                             imagesize::blob_size(&data)
                                 .map(|d| (Some(d.width), Some(d.height)))
@@ -180,7 +213,22 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                             };
 
                             let mut dimensions = (None, None);
-                            for stream in ffprobe::ffprobe(&path).unwrap().streams.iter() {
+                            for stream in ffprobe::ffprobe(&path)
+                                .map_err(|e| {
+                                    log::error!(
+                                        "Failed to strip file metadata on {} with id {}: {:?}",
+                                        name,
+                                        id,
+                                        e
+                                    );
+                                    ServerError {
+                                        error: "Failed to strip file metadata".to_string(),
+                                    }
+                                    .to_error_response()
+                                })?
+                                .streams
+                                .iter()
+                            {
                                 if let (Some(width), Some(height)) = (stream.width, stream.height) {
                                     dimensions = (Some(width as usize), Some(height as usize));
                                 }
@@ -259,7 +307,7 @@ AND bucket = ?
             .await
             .map(|r| Self {
                 id: r.id.parse().unwrap(),
-                file_id: r.id.parse().unwrap(),
+                file_id: r.file_id.parse().unwrap(),
                 name: r.name,
                 content_type: r.content_type,
                 hash: r.hash,
@@ -281,7 +329,18 @@ AND bucket = ?
                 .ok_or_else(|| NotFoundError.to_error_response())?;
             let file = fs::File::open(format!("files/{}/{}", bucket, file_data.file_id))
                 .await
-                .unwrap();
+                .map_err(|e| {
+                    log::error!(
+                        "Could not fetch file {} with id {}: {:?}",
+                        file_data.name,
+                        file_data.id,
+                        e
+                    );
+                    ServerError {
+                        error: "Error fetching file".to_string(),
+                    }
+                    .to_error_response()
+                })?;
             Ok(FetchResponse {
                 file,
                 disposition: Header::new(
@@ -302,7 +361,18 @@ AND bucket = ?
                 .ok_or_else(|| NotFoundError.to_error_response())?;
             let file = fs::File::open(format!("files/{}/{}", bucket, file_data.file_id))
                 .await
-                .unwrap();
+                .map_err(|e| {
+                    log::error!(
+                        "Could not fetch file {} with id {}: {:?}",
+                        file_data.name,
+                        file_data.id,
+                        e
+                    );
+                    ServerError {
+                        error: "Error fetching file".to_string(),
+                    }
+                    .to_error_response()
+                })?;
             Ok(FetchResponse {
                 file,
                 disposition: Header::new(
