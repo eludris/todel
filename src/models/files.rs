@@ -279,7 +279,7 @@ AND bucket = ?
             let file_data = Self::get(id, bucket, db)
                 .await
                 .ok_or_else(|| NotFoundError.to_error_response())?;
-            let file = fs::File::open(format!("files/{}/{}", bucket, file_data.id))
+            let file = fs::File::open(format!("files/{}/{}", bucket, file_data.file_id))
                 .await
                 .unwrap();
             Ok(FetchResponse {
@@ -300,7 +300,7 @@ AND bucket = ?
             let file_data = Self::get(id, bucket, db)
                 .await
                 .ok_or_else(|| NotFoundError.to_error_response())?;
-            let file = fs::File::open(format!("files/{}/{}", bucket, file_data.id))
+            let file = fs::File::open(format!("files/{}/{}", bucket, file_data.file_id))
                 .await
                 .unwrap();
             Ok(FetchResponse {
