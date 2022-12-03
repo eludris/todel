@@ -229,6 +229,7 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                             {
                                 if let (Some(width), Some(height)) = (stream.width, stream.height) {
                                     dimensions = (Some(width as usize), Some(height as usize));
+                                    break;
                                 }
                             }
                             dimensions
