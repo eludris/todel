@@ -186,7 +186,7 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                                     .save(&path)
                                     .map_err(|e| {
                                         log::error!(
-                                            "Failed to strip file metadata on {} with id {}: {:?}",
+                                            "Failed to strip image metadata on {} with id {}: {:?}",
                                             name,
                                             id,
                                             e
@@ -216,7 +216,7 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                             for stream in ffprobe::ffprobe(&path)
                                 .map_err(|e| {
                                     log::error!(
-                                        "Failed to strip file metadata on {} with id {}: {:?}",
+                                        "Failed to strip video metadata on {} with id {}: {:?}",
                                         name,
                                         id,
                                         e
