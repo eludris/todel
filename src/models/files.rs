@@ -57,26 +57,24 @@ pub use file_logic::*;
 
 #[cfg(feature = "http")]
 mod file_logic {
-
     #![allow(clippy::unnecessary_lazy_evaluations)] // Needed because rocket
     use std::path::PathBuf;
 
-    use crate::ids::IDGenerator;
-    use crate::models::{
-        ErrorResponse, ErrorResponseData, FileData, FileMetadata, NotFoundError, ServerError,
-        ValidationError,
-    };
     use image::io::Reader as ImageReader;
-    use sqlx::{pool::PoolConnection, MySql};
-    use tokio::{fs, sync::Mutex};
-
     use rocket::{
         fs::TempFile,
         http::{ContentType, Header},
         FromForm, Responder,
     };
+    use sqlx::{pool::PoolConnection, MySql};
+    use tokio::{fs, sync::Mutex};
 
     use super::File;
+    use crate::ids::IDGenerator;
+    use crate::models::{
+        ErrorResponse, ErrorResponseData, FileData, FileMetadata, NotFoundError, ServerError,
+        ValidationError,
+    };
 
     #[derive(Debug, Responder)]
     pub struct FetchResponse<'a> {
