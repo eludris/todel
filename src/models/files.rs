@@ -110,7 +110,7 @@ SELECT file_id, content_type, width, height
 FROM files
 WHERE hash = ?
 AND bucket = ?
-            ",
+                ",
                 hash,
                 bucket,
             )
@@ -123,7 +123,7 @@ AND bucket = ?
                     "
 INSERT INTO files(id, file_id, name, content_type, hash, bucket, spoiler, width, height)
 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ",
+                    ",
                     id.to_string(),
                     file_id,
                     name,
@@ -266,7 +266,7 @@ VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
                     "
 INSERT INTO files(id, file_id, name, content_type, hash, bucket, spoiler, width, height)
 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ",
+                    ",
                     file.id.to_string(),
                     file.id.to_string(),
                     file.name,
@@ -298,7 +298,7 @@ SELECT *
 FROM files
 WHERE id = ?
 AND bucket = ?
-            ",
+                ",
                 id.to_string(),
                 bucket,
             )
