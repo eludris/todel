@@ -38,10 +38,6 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name !=
       github.repository
     runs-on: ubuntu-latest
-    env:
-      RUST_LOG: "trace"
-      DATABASE_URL: "mysql://root:root@localhost:3306/eludris"
-      SQLX_OFFLINE: 1
 
     steps:
       - uses: actions/checkout@v2
@@ -53,8 +49,6 @@ jobs:
           override: true
 
       - uses: Swatinem/rust-cache@v2
-
-      - run: docker-compose -f tests/docker-compose.yml up -d
 
       - uses: actions-rs/cargo@v1
         with:
@@ -70,10 +64,6 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name !=
       github.repository
     runs-on: ubuntu-latest
-    env:
-      RUST_LOG: "trace"
-      DATABASE_URL: "mysql://root:root@localhost:3306/eludris"
-      SQLX_OFFLINE: 1
 
     steps:
       - uses: actions/checkout@v2
@@ -86,8 +76,6 @@ jobs:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
-
-      - run: docker-compose -f tests/docker-compose.yml up -d
 
       - uses: actions-rs/cargo@v1
         with:
