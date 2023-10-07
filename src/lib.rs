@@ -1,14 +1,19 @@
-//! A simple crate that houses most of the Eludris models & shared logic.
+//! A simple crate with Eludris models
 
-#[cfg(feature = "logic")]
-#[macro_use]
-extern crate lazy_static;
+mod files;
+mod gateway;
+mod info;
+mod messages;
+mod response;
+mod sessions;
+mod users;
+
+pub use files::*;
+pub use gateway::*;
+pub use info::*;
+pub use messages::*;
+pub use response::*;
+pub use sessions::*;
+pub use users::*;
 
 pub mod conf;
-#[cfg(feature = "http")]
-pub mod http;
-#[cfg(feature = "logic")]
-pub mod ids;
-pub mod models;
-
-pub use conf::Conf;
