@@ -16,5 +16,5 @@ projects with mind, add it to your own project either by:
 - Adding the following line to your `Cargo.toml`
 
   ```toml
-  todel = { git = "https://github.com/eludris.todel" }
+  todel = { git = "https://github.com/eludris/todel" }
   ```
